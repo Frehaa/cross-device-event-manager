@@ -9,14 +9,14 @@ public class SocketTest {
 
     Socket socket = new Socket(address, port);
 
-    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-    PrintWriter writer = new PrintWriter(socket.getOutputStream());
+    DataInputStream in = new DataInputStream(socket.getInputStream());
+    DataOutputStream writer = new DataOutputStream(socket.getOutputStream());
 
     System.out.println("Sending...");
-    writer.write("Hello over there\n");
+    writer.writeUTF("Hello over there\n");
     writer.flush();
 
-    String line = in.readLine();
+    String line = in.readUTF();
     System.out.println(line);
 
     writer.close();
