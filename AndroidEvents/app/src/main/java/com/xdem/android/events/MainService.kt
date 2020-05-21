@@ -10,6 +10,7 @@ import org.json.JSONObject
 import java.io.*
 import java.net.InetAddress
 import java.net.Socket
+import java.nio.charset.Charset
 
 class MainService : Service() {
     private var networkThread: Thread = NetworkThread(this)
@@ -18,11 +19,12 @@ class MainService : Service() {
     private class NetworkThread(service : MainService) : Thread() {
         private val s : MainService = service
         private val port : Int = 10451
+        private val charset = Charsets.UTF_8
 
         override fun run() {
             val socket = Socket(InetAddress.getByName("192.168.1.3"), port)
-            val reader = DataInputStream(socket.getInputStream())
-            val writer = DataOutputStream(socket.getOutputStream())
+            val reader = socket.getInputStream()
+            val writer = socket.getOutputStream()
 
             val message = JSONObject()
             message.put("name", "test_event")
@@ -35,11 +37,12 @@ class MainService : Service() {
 
             Log.i("NetworkThread", message.toString())
 
-            writer.writeUTF(message.toString())
+            writer.write(message.toString().toByteArray(charset))
+            writer.write("\n".toByteArray(charset))
             writer.flush()
 
-            val line = reader.readUTF()
-            Log.i("NetworkThread", "Message from server: " + line)
+            val bytes = reader.readBytes()
+            Log.i("NetworkThread", "Message from server: " + String(bytes,charset))
             socket.close()
 
             sleep(1000)
