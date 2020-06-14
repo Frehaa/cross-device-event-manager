@@ -1,0 +1,13 @@
+D:\Workspace\cross-device-event-manager\WindowsEvents\WindowsEvents\bin\Debug\netcoreapp3.1\WindowsEvents.exe
+D:\Workspace\cross-device-event-manager\WindowsEvents\WindowsEvents\bin\Debug\netcoreapp3.1\WindowsEvents.deps.json
+D:\Workspace\cross-device-event-manager\WindowsEvents\WindowsEvents\bin\Debug\netcoreapp3.1\WindowsEvents.runtimeconfig.json
+D:\Workspace\cross-device-event-manager\WindowsEvents\WindowsEvents\bin\Debug\netcoreapp3.1\WindowsEvents.runtimeconfig.dev.json
+D:\Workspace\cross-device-event-manager\WindowsEvents\WindowsEvents\bin\Debug\netcoreapp3.1\WindowsEvents.dll
+D:\Workspace\cross-device-event-manager\WindowsEvents\WindowsEvents\bin\Debug\netcoreapp3.1\WindowsEvents.pdb
+D:\Workspace\cross-device-event-manager\WindowsEvents\WindowsEvents\obj\Debug\netcoreapp3.1\WindowsEvents.csprojAssemblyReference.cache
+D:\Workspace\cross-device-event-manager\WindowsEvents\WindowsEvents\obj\Debug\netcoreapp3.1\WindowsEvents.AssemblyInfoInputs.cache
+D:\Workspace\cross-device-event-manager\WindowsEvents\WindowsEvents\obj\Debug\netcoreapp3.1\WindowsEvents.AssemblyInfo.cs
+D:\Workspace\cross-device-event-manager\WindowsEvents\WindowsEvents\obj\Debug\netcoreapp3.1\WindowsEvents.csproj.CoreCompileInputs.cache
+D:\Workspace\cross-device-event-manager\WindowsEvents\WindowsEvents\obj\Debug\netcoreapp3.1\WindowsEvents.dll
+D:\Workspace\cross-device-event-manager\WindowsEvents\WindowsEvents\obj\Debug\netcoreapp3.1\WindowsEvents.pdb
+D:\Workspace\cross-device-event-manager\WindowsEvents\WindowsEvents\obj\Debug\netcoreapp3.1\WindowsEvents.genruntimeconfig.cache

@@ -1,52 +1,53 @@
 package com.xdem.android.events
 
-import android.app.Service
+import android.app.*
 import android.content.Intent
 import android.os.*
 import android.util.Log
 import android.widget.Toast
-import org.json.JSONArray
 import org.json.JSONObject
-import java.io.*
+import java.io.OutputStream
+import java.lang.Process
 import java.net.InetAddress
 import java.net.Socket
 import java.nio.charset.Charset
+import java.util.*
+import kotlin.concurrent.schedule
+import kotlin.concurrent.thread
+import kotlin.text.Charsets.UTF_8
 
 class MainService : Service() {
-    private var networkThread: Thread = NetworkThread(this)
+    private val charset = UTF_8
 
+    private val address: InetAddress = InetAddress.getByName("192.168.1.3")
+    private val port: Int = 10451
+    private val networkThread: NetworkThread = NetworkThread(address, port)
+    private var networkHandler: NetworkHandler? = null
 
-    private class NetworkThread(service : MainService) : Thread() {
-        private val s : MainService = service
-        private val port : Int = 10451
-        private val charset = Charsets.UTF_8
+    private inner class NetworkThread(address: InetAddress, port: Int) : Thread() {
+        private val address = address
+        private val port = port
+        private var socket: Socket? = null
 
         override fun run() {
-            val socket = Socket(InetAddress.getByName("192.168.1.3"), port)
-            val reader = socket.getInputStream()
-            val writer = socket.getOutputStream()
+            Log.i("Testing", "Preparing thread")
+            Looper.prepare()
+            socket = Socket(address, port)
+            networkHandler = NetworkHandler(socket!!.getOutputStream())
+            Log.i("Testing", "Looping")
+            Looper.loop()
+            Log.i("Testing", "End of loop")
+        }
+    }
 
-            val message = JSONObject()
-            message.put("name", "test_event")
-            val args = JSONArray()
-            args.put(5)
-            args.put(true)
-            args.put("String")
-            args.put(0.2)
-            message.put("args", args)
+    private inner class NetworkHandler(outputStream: OutputStream) : Handler() {
+        private val writer: OutputStream = outputStream
 
-            Log.i("NetworkThread", message.toString())
-
-            writer.write(message.toString().toByteArray(charset))
+        override fun handleMessage(msg: Message) {
+            val jsonMessage = msg.obj as JSONObject
+            writer.write(jsonMessage.toString().toByteArray(charset))
             writer.write("\n".toByteArray(charset))
             writer.flush()
-
-            val bytes = reader.readBytes()
-            Log.i("NetworkThread", "Message from server: " + String(bytes,charset))
-            socket.close()
-
-            sleep(1000)
-            s.stopSelf()
         }
     }
 
@@ -54,25 +55,51 @@ class MainService : Service() {
 
     override fun onCreate() {
         Toast.makeText(this, "Service created", Toast.LENGTH_LONG).show()
+/*
+        val pendingIntent: PendingIntent = Intent(this, MainActivity::class.java).let {
+            PendingIntent.getActivity(this, 0, it, 0)
+        }
+
+        val notification: Notification = Notification.Builder(this, "channelId")
+            .setContentTitle("ContentTile")
+            .setContentText("ContentText")
+            .setSmallIcon(R.drawable.ic_launcher_background)
+            .setContentIntent(pendingIntent)
+            .setTicker("TickerText")
+            .build()
+
+        startForeground(1, notification)*/
 
         networkThread.start()
 
-        Log.i("MainService", networkThread.state.name)
+        val jsonObject = JSONObject()
+        jsonObject.put("Event", "onCreate")
+        sendEvent(jsonObject)
     }
-
-
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Toast.makeText(this, "Service started", Toast.LENGTH_LONG).show()
-        Log.i("MainService", networkThread.state.name)
+
+        val jsonObject = JSONObject()
+        jsonObject.put("Event", "onStart")
+        sendEvent(jsonObject)
 
         return START_STICKY
     }
 
+    private fun sendEvent(obj: JSONObject) {
+        Log.i("MainService", "Sending obj: " + obj.toString())
+        networkHandler?.obtainMessage()?.also {msg ->
+            msg.obj = obj
+            networkHandler?.sendMessage(msg)
+        }
+
+    }
+
     override fun onDestroy() {
+        val jsonObject = JSONObject()
+        jsonObject.put("Event", "onDestroy")
+        sendEvent(jsonObject)
         Toast.makeText(this, "Service destroyed", Toast.LENGTH_LONG).show()
-        Log.i("MainService", networkThread.state.name)
-        networkThread.interrupt()
-        Log.i("MainService", networkThread.state.name)
     }
 }
