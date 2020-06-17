@@ -6,16 +6,18 @@ using System.Threading;
 using System.Collections.Concurrent;
 using Newtonsoft.Json;
 using CDEM.Shared;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace CDEM.Server.Windows
 {
     class EventServer
     {
-        private readonly static int TIMEOUT = 2000;
         private readonly static int PORT = 10451;
         private readonly static BlockingCollection<Event> messages = new BlockingCollection<Event>(new ConcurrentQueue<Event>());
-        private readonly static ConcurrentDictionary<string, ConcurrentBag<StreamWriter>> eventListeners = new ConcurrentDictionary<string, ConcurrentBag<StreamWriter>>();
-        private readonly static Thread messageThread = new Thread(handleMessages);
+        private readonly static ConcurrentDictionary<StreamWriter, ImmutableHashSet<string>> eventListeners = new ConcurrentDictionary<StreamWriter, ImmutableHashSet<string>>();
+        private readonly static Thread messageThread = new Thread(HandleMessages);
         private readonly static TcpListener serverSocket = TcpListener.Create(PORT);
 
         static void Main(string[] args)
@@ -32,17 +34,20 @@ namespace CDEM.Server.Windows
             }
         }
 
-        static void handleMessages()
+        static void HandleMessages()
         {
             while(Thread.CurrentThread.IsAlive)
             {
-                Event e = messages.Take();
+                Event ev = messages.Take();
 
-                var listeners = eventListeners.GetOrAdd(e.Name, new ConcurrentBag<StreamWriter>());
-
-                foreach (var listener in listeners)
+                foreach (var listener in eventListeners.Keys)
                 {
-                    listener.WriteLine(e.Name);
+                    if (eventListeners[listener].Contains(ev.Name))
+                    {
+                        string msg = JsonConvert.SerializeObject(ev);
+                        listener.WriteLine(msg);
+                        listener.Flush();
+                    }
                 }
             }
             
@@ -51,14 +56,16 @@ namespace CDEM.Server.Windows
         static Thread CreateEventListenerThread(TcpClient client)
         {
             var reader = new StreamReader(client.GetStream(), Encoding.UTF8);
+            var writer = new StreamWriter(client.GetStream(), Encoding.UTF8);
             return new Thread(() =>
             {
                 try
                 {
-                    // Read initial connection message
-                    //dynamic msg = JsonConvert.DeserializeObject(reader.ReadLine().Trim());
+                    Subscription subscription = JsonConvert.DeserializeObject<Subscription>(reader.ReadLine().Trim());
+                    eventListeners[writer] = subscription.Events.ToImmutableHashSet();
 
-                    // Append this connection dictionary of event to output stream for each event subscribed to
+                    Console.WriteLine("After insertion dictionary contains");
+                    PrintDictionary();
 
                     while (Thread.CurrentThread.IsAlive)
                     {
@@ -68,9 +75,8 @@ namespace CDEM.Server.Windows
                         Console.WriteLine(line + " " + e.ToString());
 
                         messages.Add(e);
-
                     }
-                } 
+                }
                 catch (IOException ioException)
                 {
                     // Cleanup lost connection
@@ -83,9 +89,25 @@ namespace CDEM.Server.Windows
                 } 
                 finally
                 {
-                    reader.Close();
+                    eventListeners.TryRemove(writer, out _);
+                    Console.WriteLine("After deletion dictionary contains");
+                    PrintDictionary();
+                    client.Close();
                 }
             });
+        }
+
+        private static void PrintDictionary()
+        {
+            foreach (var key in eventListeners.Keys)
+            {
+                Console.Write("\t" + key.ToString());
+                foreach (var item in eventListeners[key])
+                {
+                    Console.Write(" - " + item);
+                }
+                Console.WriteLine();
+            }
         }
 
         static Thread CreateEchoThread(TcpClient client)
