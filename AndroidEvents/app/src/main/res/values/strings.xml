@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">AndroidEvents</string>
     <string name="greeting">Welcome!</string>
+    <string name="NEW_CONNECTION">NEW_CONNECTION</string>
 </resources>
