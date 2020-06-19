@@ -6,9 +6,9 @@ using System.Threading;
 using System.Collections.Concurrent;
 using Newtonsoft.Json;
 using CDEM.Shared;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
+
+using static CDEM.Shared.Constants;
 
 namespace CDEM.Server.Windows
 {
@@ -25,13 +25,31 @@ namespace CDEM.Server.Windows
             messageThread.Start();
             serverSocket.Start();
 
+            /*
+            var t1 = new Timer(o =>
+            {
+                messages.Add(new Event(PHONE_CALL_INCOMING, new dynamic[0]));
+            }, null, 1500, 100000);
+
+            var t2 = new Timer(o =>
+            {
+                messages.Add(new Event(SMS_RECEIVED, new dynamic[] { 30135513, "hello there" }));
+            }, null, 2000, 20000);
+            */
+
             for (int i = 0; i < 5; ++i) {
                 Console.WriteLine("Listening for client");
                 var client = serverSocket.AcceptTcpClient();
                 Console.WriteLine("New connection " + i);
                 CreateEventListenerThread(client).Start();
-                //CreateEchoThread(client).Start();
             }
+
+            messageThread.Abort();
+            serverSocket.Stop();
+
+            //t1.Dispose();
+            //t2.Dispose();
+            messageThread.Join();
         }
 
         static void HandleMessages()
