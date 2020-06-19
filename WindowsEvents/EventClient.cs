@@ -4,14 +4,14 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using Newtonsoft.Json;
-using CDEM.Shared;
+using XDEM.Shared;
 
-using static CDEM.Shared.Constants;
+using static XDEM.Shared.Constants;
 using System.Threading;
 using System.Diagnostics;
 using NAudio.Wave;
 
-namespace CDEM.Client.Windows
+namespace XDEM.Client.Windows
 {
     class EventClient
     {

@@ -1,4 +1,4 @@
-﻿namespace CDEM.Shared
+﻿namespace XDEM.Shared
 {
     public class Subscription
     {
